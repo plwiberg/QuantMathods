@@ -1,0 +1,129 @@
+---
+title: "Quantitative Methods - Intro"
+output:
+  html_document:
+    df_print: paged
+---
+
+We will be using the R programming environment in this course to introduce you to quantitative techniques for problem solving in environmental sciences, including data analysis, data visualization, simple mathematical models, and basic concepts of computer programming. 
+
+R is a freely available programming language which has built-in data handling, statistical and graphical capabilites that make it ideal for investigating  and visualizing environmental datasets. In addition, there are many libraries, or packages, that can be installed to extend R's built-in capabilities. 
+
+You should at this point have R and RStudio loaded on your computer. RStudio is an integrated development environment (IDE) for R that makes it easy to create and run code and visualize the results all within one graphical interface. All in-class work and assignments will be done in RStudio.
+
+R has functionality to support complex data analysis, but the basics of R are relatively easy to learn and understand. To get started, we will explore one of R's built-in datasets and do some simple analyis and plotting using it.
+
+Open up RStudio and type: data( after the ">". You should see a pop-up drop-down list of datasets preloaded into R. Scroll down to select the "Nile" dataset or type: data("Nile) as indicated in the code block below. To execute this line of code, click the *Run* button within the chunk (green >) or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+Hovering over the name of the dataset before clicking it will tell you something about it. In the case of Nile: "Measurements of the annual flow of Nile at Aswan, 1871-1980, in 10^8 m3" [per year], plus a citation.
+
+```{r}
+data("Nile")
+```
+
+If you look on the "Environment" tab on the upper-right window of RStudio, you should see the name "Nile" appear. If you click on the name, it should show you that Nile is a time series from 1871-1970. We can get a sense of the Nile annual discharge by creating a histogram as below
+```{r}
+hist(Nile)
+```
+and/or by getting some summary statistics
+```{r}
+summary(Nile)
+```
+
+You can also ask specifically for the mean or standard deviation (among other metrics) as
+```{r}
+mean(Nile)
+sd(Nile)
+median(Nile)
+length(Nile)
+mode(Nile)
+
+```
+Two observations: 1) it might be useful to include what is being calculated along with the value and 2) "mode" didn't give what I was expecting (the value corresponding to the peak of the distribution).
+
+1) We can add information to what is printed on the screen. For example, we could type
+```{r}
+print(paste("Mean =",mean(Nile)))
+```
+The paste() command combines (concatenate) consecutive bits of text (in "") and values.
+
+2) To learn how various commands work, RStudio has a "Help" tab in the lower-right window of the screen. If we type "paste" or "mode" into the bar at the top of the Help window, you will see information about how to use the commands, what the various options are, and examples (at the end). For example, looking at help for "mode" we find that it tells us the storage mode of an object. Surprisingly (to me) R doesn't have a command to calculate the mode of a distribution, but we could make one (and will in the next week or so).
+
+We can see the values of discharge by typing Nile on the command line (after the >), e.g.
+It would be useful to plot the time series of discharge (discharge vs year). 
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file). 
+```{r}
+Nile
+```
+R prints it as a row of values, broken up into multiple rows so it will fit on the screen. If the length of Nile were much longer, it would only print out the initia portion of the file. If we just wanted to see the first few or last few values of Nile, we could use head(Nile) or tail(Nile). Or we can specify a particular range of values, as below:
+```{r}
+Nile[20:30]
+```
+This lists the 20th to 30th value in the time series of discharge. Values like 20 and 30 here are called indices. They are similar to  row or column numbers in Excel. Commands like mean can be limited to a range of values. The syntax 20:30 means all integers between 20 and 30 (inclusive). Try just typing 20:30. 
+```{r}
+20:30
+```
+We could assign a variable to this list of numbers as, e.g.
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+```{r}
+a = 20:30
+```
+Now if  you look at the Environment (upper-right window), you will see a new variable in the list, a, a list of 11 integers.
+
+We can use this method to generate a vector of years corresponding to the discharges in the time series.
+```{r}
+Year = 1871:1970
+```
+This could be useful if we wanted to plot the values.
+```{r}
+plot(Year,Nile)
+```
+"plot" is the simplest plotting command in R. We will use more sophisticated plotting commands later in the semester. However, even plot() has option. For example, we can adjust the y-axis legend to say "Nile discharge 10^8 m3/yr" as
+```{r}
+plot(Year,Nile,ylab=c("Nile discharge 10^8 m3/yr"))
+```
+We can also change the plot from showing values as circles to connecting points with a line by adding: type="l"
+```{r}
+plot(Year,Nile,type="l",ylab=c("Nile discharge 10^8 m3/yr"))
+```
+We will explore a range of options for plotting data like this in the coming weeks. Note: Nile is a "time-series" object which means it has information about time already built in, meaning that we could get a plot by just typing: plot(Nile)
+```{r}
+plot(Nile)
+```
+You can see it defaults to a line graph. This can be useful, but most time series we will examine in class are just lists of values, not time-series objects. We could create a time-series object from the list of values, but in my experience it is not add that much utility to do that. In this case we could generate a separate list of discharges (list or vector) as
+```{r}
+Q = as.numeric(Nile)
+```
+as.numeric() changes the class of a variable. [Trying typing: class(Nile) and class(Q).] We can plot Q as
+```{r}
+plot(Year,Q,type="l",ylab=c("Nile discharge 10^8 m3/yr"))
+```
+
+One interesting analysis we could do with this data is to see if there is a trend through time, that is, whether discharge is increasing or decreasing over the length of the record. R has a very useful built-in function lm() to perform linear regressions. The syntax is lm(y~x) where y in the dependent variable (Q in this case) and x is the independent variable (Year in this case). We'll give it a name so we can better explore the results
+```{r}
+fit = lm(Q ~ Year)
+```
+We can see what the best fit looks like by typing: abline(fit) after plotting the time series. [You would replace "fit" by whatever name you assigned to the linear regression if you called it something else.]
+```{r}
+plot(Year,Nile,type="l",ylab=c("Nile discharge 10^8 m3/yr"))
+abline(fit)
+```
+The output of lm() is a list of 12 related variables. You can see what they are by typing: attributes(fit). The attribute "coefficients" gives the slope and intercept. These can be viewed or referenced by typine fit$attribute where "attribute" is replaced by whatever attribute you want. For example
+```{r}
+c = fit$coefficients
+print(c)
+```
+creates a variable c with 2 values. The first is the intercept and the 2nd is the slope. You can also use the summary() function to get an overview of the fit.
+```{r}
+summary(fit)
+```
+Values can be extracted from the summary. Look at help for summary.lm to see what values can be obtained this way. They incude r.squared and degrees of freedom (df).
+```{r}
+rs = summary(fit)$r.squared
+```
+
+When considering trends in data, one question we are frequently interested in is whether the trend is signficantly different from zero (i.e, no trend). We can commonly done by looking at the 95% confidence interval around the slope. If the confidence interval includes zero, then the slope is not significantly different from zero at 95% confidence. We can obtain the confidence interval using the confint() command:
+```{r}
+ci = confint(fit)
+print(ci)
+```
+The results show that the 95% confidence interval for slope does not include zero so we can say with 95% confidence that the Nile discharge is trending lower with time.
