@@ -1,0 +1,172 @@
+---
+title: "QM Programming Basics 1 - Notebooks and variables"
+output:
+  html_document:
+    df_print: paged
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Execute chunks of code by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+
+```{r}
+data(Nile)
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+
+```{r}
+Q = as.numeric(Nile)
+Year = 1871:1970
+plot(Year,Q,type="l")
+fit = lm(Q ~ Year)
+abline(fit)
+```
+
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file). 
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+
+I recommend you use R notebooks for taking notes and for completing assignments.
+
+***Variables (vectors, matrices)***
+
+R can be used to do mathematical calculations (essentially like a calculator), e.g.
+
+```{r}
+8*7
+```
+
+You have to get used to writing out your equations, but I use R often rather than using a calculator to do a range of calculations.
+
+When we think about programming, we typically want to do some sort of calculation, but we want to set it up in a general way that allows us to use the resulting "code" for a range of calculations instead of a single, specific calculation. 
+To do this, we generally use variables (e.g., x, y) rather than specific numbers, where the variables can take on a range of values. For example,
+
+```{r}
+x=8
+y=7
+z=x*y
+print(z)
+```
+
+Clearly we haven't saved ourselves any work so far, but we have stored the answer as a variable (z), which could then be used in another calculation, as is true of x and y. We might also have tables of values of x and y that we could read in, rather than "hard wiring" their values in the code.
+
+One advantage of using variables is that they can represent more than 1 value at a time, e.g.
+
+```{r}
+x = 8:10
+print(x)
+```
+This construction, using ":", creates a vector or list of values from the value to the left of the ":" to the value to the right, incremented by 1. Try y=8.5:10.5 and see what happens.
+
+```{r}
+y = 8.5:10.5
+print(y)
+```
+What if we want to increment each value by 0.5 instead of 1? Then we'd have to take a different approach, using a built-in function seq() [seq for sequence]. 
+
+```{r}
+y = seq(8.5,10.5,0.5)
+print(y)
+```
+
+Alternatively, what if we want to specify a particular sequence of numbers, not necessarily evenly spaced, e.g. 8, 9.25, 11, 12.5? We can construct any specific sequence using the c() command [c for concatenate]
+```{r}
+q = c(8, 9.25, 11, 12.5)
+print(q)
+```
+
+We could do the same for a list of letters, or words:
+```{r}
+qa = c("A","B","c","z","8")
+qw = c("cat","bat",",mat")
+print(qa)
+print(qw)
+```
+
+Of course if these were long lists, typing them in would be tedious, error-prone and would fall in the category of "hard wired". Instead it would be better to have the values stored in a separate file, like a spreadsheet, and read them in. We'll talk about that next week.
+
+Numbers and characters (words, letters) are two different types of variables. 
+```{r}
+typeof(q)  #typeof() refers to the way R stores a variable
+typeof(qa)
+class(q)  #class() is an attribute  affecting what can be done with a variable
+class(qa)
+```
+
+You can change a numeric variable into a character variable. Can you do the reverse?
+```{r}
+p = as.character(q)
+print(p)
+pa = as.numeric(qa)
+print(pa)
+```
+
+Now let's create 2 numeric vectors, x and y, each with 5 values. What can we do with them? To start, simple arithmetic like add and subtract:
+
+```{r}
+x = 8:12
+y = c(1.5,3,4.1,6,7.7)
+z1 = x + y
+z2 = x - y
+print(z1)
+print(z2)
+```
+We can also multiply, though you may know that there is more than one way to "multiply" two vectors (e.g., dot product). Let's see what happens if we simply multiply and divide x and y.
+
+```{r}
+z3 = x * y
+z4 = x / y
+print(z3)
+print(z4)
+```
+What we see is that R understands this to mean that each element of x is multiplied or divided by the corresponding element in y, which is probably mostly what we want it to mean. What do you think would happen if x is longer than y? Let's see:
+
+```{r}
+xs = 8:12
+ys = c(1.5,3,4.1,6)
+zs = xs * ys
+print(zs)
+```
+R warns us of a problem but still gives an answer. Where you do you the value of 18 came from? R will cycle numbers if one variable runs out before another in a computation. BE CAREFUL!
+
+There are some particular vectors that can be useful. We can create a vector of 0's or NAs or 1's using rep():
+```{r}
+a = rep(0,10)
+b = rep(1,3)
+c = rep(NA,5)
+print (a)
+print (b)
+print (c)
+```
+
+A table or spreadsheet of data may take the form of a matrix, a structure with rows and columns. We can also create a matrix using the matrix() function.
+
+```{r}
+A = matrix(c(1,2,3,4,5,6),nrow=2,ncol=3)
+```
+What do you think this will look like? In particular, what is the first row? 1 2 3 or 1 3 5?.	Internal storage of matrix in R is in column-major order. That is it fills the first column, then the 2nd..., so the first row would be 1 3 5.
+
+```{r}
+print (A)
+```
+
+What if we wanted it to fill rowwise rather than columnwise? There are several options.
+```{r}
+A = matrix(c(1:6),nrow=2,byrow=TRUE)  #specify to fill by row
+print(A)
+A = t(matrix(c(1:6),nrow=3)) #take transpose of matrix
+print(A)
+A = rbind(c(1,2,3),c(4,5,6))  #rbind() = row bind 
+                              #also cbind() = column bind
+print(A)
+```
+
+Note 1: You can just specify # rows or cols since one determines other for a given vector length. R will complain if the number of elements in the matrix does not equal the product of nrow*ncol.
+Note 2: Elements of a matrix are specified by their row and column. E.g., A[2,1] = ? (2 or 4)?
+
+```{r}
+A[2,1]
+```
+The 1st value in [ ] is the row number (or index), the 2nd value is the column number. 

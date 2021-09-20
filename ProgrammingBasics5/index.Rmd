@@ -1,0 +1,141 @@
+---
+title: 'Quant Methods: Programming Basics 5 - Scripts and Functions'
+output:
+  html_document:
+    df_print: paged
+---
+Class exercise: develop a program (code, script) to calculate hours of daylight as a function of latitude and day. 
+
+An outline of the code is in DaylightHoursOutline.R on Collab Resources/ClassCodes
+
+How to query for a value? [Enter value in console]
+
+```{r}
+p = readline("enter # from 1 to 10")
+print(p)
+```
+
+```{r}
+p = readline("enter # from 1 to 10: ")
+print(p)
+```
+
+
+hmm.. Reads as char. Want a numeric value
+
+```{r}
+p = as.numeric(readline("enter # from 1 to 10: "))
+print(p)
+```
+
+Better.
+
+Considerations: naming variables, informative heading for plot.
+If you complete this quickly, make new version that calculates daylight hours for latitudes from -65 to 65 for a specified day.
+
+Fundamentally, daylight hours is a function of day and latitude, but run into a number of problems if you try just making them both vectors because we want to combine all values of each, not just first day with first latitude.
+
+One way to solve the problem is to loop over possible latitudes and create a matrix of solutions. That involves reusing the code to calculate daylight hours repeatedly, which is a good reason to think about creating a function to do the calculation. 
+
+
+**Functions**
+
+Functions are a way to do specific computing tasks (say finding mean) that you might want to do in a number of contexts. 
+
+They take input, return output based on a set of instructions or computations
+
+All R math functions and other commands are actually just R function codes
+
+Function format:
+FuncName = function(x) {
+	Code for calculating y or whatever
+	Return y
+}
+
+In our daylight hours example, it would make sense to make a function of the daylight hrs calculation. That would allow us to use it in a variety of contexts.
+
+```{r}
+#calculates daylight hours for given latitude and yearday
+daylighthrs = function(lat,yearday) {
+  
+  	phir = lat*pi/180 #degree  #-> radians
+  	delta = 0.4093*sin(pi/180*yearday-1.405) #solar declination
+  	omegas = acos(-tan(phir)*tan(delta)) #sunset hour angle
+  	nhours = 24*omegas/pi #hours in day
+  	return(nhours)
+}
+
+```
+Try it out...
+
+```{r}
+x = daylighthrs(45,200)
+print(x)
+```
+Can we input a vector of days?
+
+```{r}
+days = 1:365
+x = daylighthrs(45,days)
+plot(days,x)
+```
+Yes!!
+also
+
+```{r}
+lats = -65:65
+day = 250
+x = daylighthrs(lats,day)
+plot(lats,x)
+```
+Now try
+
+```{r}
+lats = -65:65
+days = 1:365
+mx = daylighthrs(lats,days)
+dim(mx)
+```
+
+Calculated something, but not what we wanted.
+
+**Loops**
+
+Loops are useful programming structure for repeating a command until a certain condition is reached (certain number of times, until end of file, until a value is sufficiently small, …)
+
+Say we wanted to multiply elements of 2 vectors x and y together.
+We could write:
+
+x=1:10; y=11:20; nx=length(x)
+f = rep(0,nx)
+for (n in 1:nx) {
+	f [n]= x[n] * y[n]
+}
+
+Does it make sense to do this? NO! because we can just write f = x*y. Loops are less efficient and more space consuming than using vector operations. But sometimes they are necessary or clearer than avoiding them.
+
+Let's extend our daylight hour calculation to loop over latitude.
+
+```{r}
+dhmatrix = matrix(NA,365,131)  #fills with NA
+lats = -65:65
+days = 1:365
+for (i in 1:length(lats)){
+  dhi = daylighthrs(lats[i],days)
+  dhmatrix[,i]=dhi
+}
+dim(dhmatrix)
+dhmatrix[1:5,1:5]
+```
+
+
+```{r}
+jd = which(days == 250)
+jl = which(lats == 45)
+plot(lats,dhmatrix[jd,])
+plot(days,dhmatrix[,jl])
+
+```
+
+
+
