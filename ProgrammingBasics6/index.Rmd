@@ -1,0 +1,209 @@
+---
+title: "QM - Programming Basics 6 - Loops and conditionals"
+output:
+  html_document:
+    df_print: paged
+---
+
+Functions
+
+Functions are a way to do specific computing tasks (say finding mean) that you might want to do in a number of contexts. 
+
+They take input, return output based on a set of instructions or computations
+
+All R math functions and other commands are actually just R function codes
+
+Function format:
+FuncName = function(x) {
+	Code for calculating y or whatever
+	Return y
+}
+
+In our daylight hours example, it would make sense to make a function of the daylight hrs calculation. That would allow us to use it in a variety of contexts.
+
+```{r}
+#calculates daylight hours for given latitude and yearday
+daylighthrs = function(latitude,yearday) {
+  
+  latrad = latitude*pi/180 #degree  #-> radians
+  solar_declination = 0.4093*sin((2*pi/365)*yearday-1.405) #solar declination
+  sunset_hour_angle = acos(-tan(latrad)*tan(solar_declination)) #sunset hour angle
+  daylight_hrs = 24*sunset_hour_angle/pi #hours in day
+  return(daylight_hrs)
+}
+
+```
+Try it out...
+
+```{r}
+x = daylighthrs(45,250)
+print(x)
+```
+Can we input a vector of days?
+
+```{r}
+days = 1:365
+x = daylighthrs(45,days)
+plot(days,x)
+```
+Yes!!
+also
+
+```{r}
+lats = -65:65
+day = 250
+x = daylighthrs(lats,day)
+plot(lats,x)
+```
+Now try
+
+```{r}
+lats = -65:65
+days = 1:365
+mx = daylighthrs(lats,days)
+dim(mx)
+```
+
+Calculated something, but not what we wanted.
+
+**Loops**
+
+Loops are useful programming structure for repeating a command until a certain condition is reached (certain number of times, until end of file, until a value is sufficiently small, …)
+
+Say we wanted to multiply elements of 2 vectors x and y together.
+We could write:
+
+x=1:10; y=11:20; nx=length(x)
+f = rep(0,nx)
+for (n in 1:nx) {
+	f [n]= x[n] * y[n]
+}
+
+Does it make sense to do this? NO! because we can just write f = x*y. Loops are less efficient and more space consuming than using vector operations. But sometimes they are necessary or clearer than avoiding them.
+
+Let's extend our daylight hour calculation to loop over latitude.
+
+```{r}
+dhmatrix = matrix(NA,365,131)  #fills with NA
+lats = -65:65
+days = 1:365
+for (i in 1:length(lats)){
+  dhi = daylighthrs(lats[i],days)
+  dhmatrix[,i]=dhi
+}
+dim(dhmatrix)
+dhmatrix[1:5,1:5]
+```
+
+
+```{r}
+jd = which(days == 250)
+jl = which(lats == 45)
+plot(lats,dhmatrix[jd,])
+plot(days,dhmatrix[,jl])
+
+```
+
+**Conditionals (if-then-else statements)**
+
+If statements: If test is T, statement is executed. If F, nothing happens. E.g., smeone asked on Monday what happens if someone entered an incorrect value into the daylighthrs code or function. Say day=1000 or lat = 100 (or even 70)?
+
+```{r}
+lats = 45
+days = -10
+dhi = daylighthrs(lats,days)
+print(dhi)
+```
+
+It gives an answer but it doesn't make sense that it would. 
+
+```{r}
+lats = 100
+days = 250
+dhi = daylighthrs(lats,days)
+print(dhi)
+```
+
+Same here! It is good practice to check whether input values conform to limits for the values. We can do this with an if-then type construction.
+
+```{r}
+#calculates daylight hours for given latitude and yearday
+daylighthrs = function(latitude,yearday) {
+  
+  #check input values
+  if (latitude > 65 | latitude < -65) {
+    print("Value of latitude is out of bounds. Use a value between -65 and 65")
+    break
+  }
+  if (days > 366 | days < 0) {
+    print("Value of days is out of bounds. Use a value between 0-365")
+    break
+  }
+  
+  latrad = latitude*pi/180 #degree  #-> radians
+  solar_declination = 0.4093*sin((2*pi/365)*yearday-1.405) #solar declination
+  sunset_hour_angle = acos(-tan(latrad)*tan(solar_declination)) #sunset hour angle
+  daylight_hrs = 24*sunset_hour_angle/pi #hours in day
+  return(daylight_hrs)
+}
+
+```
+
+```{r}
+lats = 45
+days = -10
+#dhi = daylighthrs(lats,days)
+#print(dhi)
+```
+```{r}
+lats = 100
+days = 250
+#dhi = daylighthrs(lats,days)
+#print(dhi)
+```
+
+There are many ways to use conditional statements. Let's look at a simple example.
+
+
+```{r}
+for (n in 1:100) {
+  print (n)
+  if (n > 19) break
+}
+```
+
+
+Result? Count from 1 to 20. When n=20, it is > 19 and loop breaks
+
+If else: else only evaluated if test is F
+
+```{r}
+for (n in 1:40) {
+  if (n <=19) {print (n)}
+  else (print(n/2))  
+}
+```
+
+Some logical operators that can be used in tests:
+a.	 x == y tests for equality, 
+b.	<= or >=
+c.	&& or || Boolean and/or (for scalars)
+d.	 ! Boolean negation
+
+e.g.:
+```{r}
+x = -5
+if (x>0) print(x)
+if (x<0) print(x*2)
+
+```
+
+
+```{r}
+x=-1
+if (x<0 && x> -3) {
+  print(x)
+  } else {
+  print("value not between -3 and 0")}
+```
+

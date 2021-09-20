@@ -1,0 +1,127 @@
+---
+title: "Quant Methods - Time Series 4 - Missing values and interpolation"
+output:
+  html_document:
+    df_print: paged
+---
+
+Last class we filled in the time missing from the Miss R discharge record for Hurricane Ida
+
+```{r}
+#ReadUSGS_V2_QM.R
+library(dplyr)
+library(lubridate)
+
+Qdf = read.csv("USGSMissRDischargeAug2021.csv")
+Qdf$DT = force_tz(mdy_hm(Qdf$DateTime), tzone="US/Central") #assign Central Time to DateTime
+Qdf$Qm3s = Qdf$Qcfs * (0.3048^3) #convert to m3/s
+
+#create full date vector
+t1 = Qdf$DT[1]
+t2 = Qdf$DT[length(Qdf$DT)]
+tfull = seq.POSIXt(t1, t2, by = "15 min")
+QFdf = data.frame(tfull) #make a data frame out of full date vector
+
+#merge Qdf data frame with full date data frame using left_join() in dplyr package
+#column names on merged variable (DT in this case) must be identical
+colnames(QFdf) = c("DT")
+QNdf = left_join(QFdf, Qdf, by="DT")
+
+plot(QNdf$DT, QNdf$Qm3s, type="l", ylab="Q (m3/s)", xlab="Time")
+```
+
+As we noticed before there are missing values - some scattered through the dataset, some larger gaps near end.
+
+Several questions to consider.
+- 1) Pros/cons of filling in missing dates?
+  a full set of times is necessary for some common types of analysis, including correlation and smoothing
+  comparisons between datasets requires matching times, which is easiest if they use same time base
+  
+- 2) Pros/cons of filling in missing values?
+
+
+Missing data values
+
+The simplest way to deal with missing data values is some form of interpolation, provided that there are only a few sporadic missing values and the parameter being interpolated varies relatively smoothly.
+The function in R for linear interpolation is approx(). We’ll examine this function and some considerations regarding its use through the code interpolation_sintim.R available on Collab under Resources/ClassCodes
+
+**Interpolation**
+
+This follows the examples in the code interpolation_sintms.R.
+
+```{r}
+x = seq(0,4*pi,0.1)
+y = sin(x)
+
+#generate 15 random integers between 1 and length of y
+r = round(runif(15,max=length(x)))
+ymr = y[-r] #remove values from row numbers = r 
+xmr = x[-r]
+ymrna = y
+xmrna = x
+ymrna[r] = NA #replace values with NA in row numbers = r 
+
+plot(xmr, ymr)
+```
+
+Note [xmr,ymr] removed the "missing values" while [xmrna, ymrna] replaced the missing values with NAs.
+
+The approx() function can be used to fill in the missing values using linear interpolation. The arguments for approx are the x and y values of data requiring interpolation and the x values that you want to have values for after interpolation. The output is a list with columns if interpolated x and y.
+
+```{r}
+#approx() uses linear interpolaiton to fill in missing values
+#output is list with x and y. 
+yint = approx(xmr,ymr,x)  #missing values added
+yintna = approx(xmrna,ymrna,x)  #NA values replaced
+#interpolated values are in yint$y or yintna$y
+
+plot(xmr,ymr)
+lines(yint$x,yint$y,type="l", col="red")
+
+#plot(xmrna,ymrna)
+#lines(yintna$x,yintna$y,type="l", col="red")
+```
+
+Interpolation looks good here.
+
+Take out lots more points.
+
+```{r}
+r2 = round(runif(100,max=length(x)))
+ymrna2 = y
+ymrna2[r2] = NA
+xmrna2 = x
+plot(xmrna2,ymrna2)
+
+yint2 = approx(xmrna2,ymrna2,x)
+lines(yint2$x,yint2$y,type="l", col="red")
+lines(x,y,type="l",lty=3,col="blue")
+
+```
+
+Still doesn't look too bad unless there is a gap, but the different between the interpolated value and the original value is larger than the case of 15 missing values.
+
+What about a longer gap?
+
+```{r}
+ygap = y; xgap = x
+ygap[(60:90)] = NA
+plot(xgap,ygap)
+
+yint3 = approx(xgap,ygap,x)
+lines(yint3$x,yint3$y,type="l", col="red")
+```
+
+Better approach for case like this?
+
+Splines offer an alternative. Splines take into account the curvature of the function.
+
+```{r}
+
+yint3s = spline(xgap,ygap,method="fmm",xout=x)
+plot(xgap,ygap)
+lines(yint3$x,yint3s$y,type="l",col="green")
+lines(x,y,type="l",lty=3,col="blue")
+```
+
+Closer in shape, but still a limit to how much of original function can be reconstructed.

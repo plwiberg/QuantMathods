@@ -1,0 +1,205 @@
+---
+title: "Quant Methods - Time Series 2 - More Dates and Time"
+output:
+  html_document:
+    df_print: paged
+---
+
+We can create a time vector for the whole SST record from Assignment 1.
+
+```{r}
+SSTdf = read.csv("SSTOI_CHLV2.csv")
+SST = as.matrix(SSTdf[,3:12])
+SSTV = c(SST)
+length(SSTV)
+```
+
+```{r}
+dbeg = as.Date("2011-01-01")
+dend = as.Date("2020-12-31")
+Date = seq.Date(dbeg,dend,by="day")
+length(Date)
+```
+
+Why difference in length? Leap days.
+
+How can we find leap days and remove them? In SST, Feb 29 in nonleapyears is assigned SST = NA. So we can remove all NAs.
+
+```{r}
+i = which(is.na(SSTV))
+length(i)
+SSTV=SSTV[-i]
+length(SSTV)
+```
+
+```{r}
+plot(Date,SSTV,type="l",ylab="SST")
+```
+
+**Date arithmetic**
+
+R has a built-in function for finding the amount of time between 2 dates: difftime()
+
+```{r}
+diffd = dend-dbeg
+print(diffd)
+difftime(dend,dbeg, units=("hours"))
+difftime(dend,dbeg, units=("secs"))
+difftime(dend,dbeg, units=("weeks"))
+dbeg+30
+
+```
+
+Anything more complicated than the above tends to be easier if the lubridate package is loaded. Load lubridate if you haven't already.
+
+```{r}
+library(lubridate)
+```
+
+Lubridate makes it easy to extract year, month and day from a date vector. Or to calculate day of year. Or determine is a year is a leap year.
+
+```{r}
+YV = year(Date)
+print(yday(dbeg))
+print(leap_year(dbeg))
+```
+
+Lubridate makes it easier to read in dates with varying formats, e.g.,
+
+```{r}
+d1 = "2021-09-13"
+d2 = "9/13/21"
+d3 = "9 Sep 2021"
+
+as.Date(d1)
+#as.Date(d2)
+#as.Date(d3)
+```
+
+as.Date gets confused if dates aren't in standard format. You can get around it by specifying the format of the dates, but it is easier to use lubridate funtions ymd, mdy, dmy, etc.
+
+
+```{r}
+x1 = ymd(d1)
+print(x1)
+x2 = mdy(d2)
+print(x2)
+x3 = dmy(d3)
+print(x3)
+```
+
+**Time**
+
+Lubridate is especially valueable when you start working with time (hours, etc.) rather than just date.
+
+```{r}
+D1 = "2021-01-01"
+T1 = "13:00"
+DT = paste(D1,T1)
+print(DT)
+```
+
+If we apply as.Date() to DT, we just get date object, not time.
+For time, we need to use something called as.POSIXct()
+
+```{r}
+d2 = as.Date(DT)
+print(d2)
+t2 = as.POSIXct(DT)
+print(t2)
+```
+
+Once something is in POSIXct form, lubridate helps us do things with it, like extract hour, find time intervals, create time vectors, etc.
+Some examples:
+
+```{r}
+print(hour(t2))
+
+T3 = "19:43"
+t3 = as.POSIXct(paste(D1,T3))
+print(minute(t3))
+
+print(difftime(t2,t3))
+difftime(t3,t2,units=("secs"))  #can still use difftime
+
+tvec = seq.POSIXt(t2,t3,by="hour")
+print(tvec)
+```
+
+Let's add some values to plot against time...
+
+```{r}
+y = 1:7
+plot(tvec,y)
+```
+
+What if we did as.numeric(t2)?
+
+```{r}
+as.numeric(t2)
+```
+
+Wow! That is certainly not days since 1970.
+Let's see what we get if you use 1970.
+
+```{r}
+t0 = as.POSIXct("1970-01-01 00:00")
+as.numeric(t0)
+print(t0)
+```
+
+What if the times should be in GMT (or UTC) rather than EST?
+
+```{r}
+t0gmt = with_tz(t0,tzone="GMT")
+print(t0gmt)
+as.numeric(t0gmt)
+```
+
+So this converts the time to the equivalent time in GMT.
+
+What if the original time was GMT rather than EST?
+
+```{r}
+t0gmt2 = force_tz(t0,tzone="GMT")
+print(t0gmt2)
+as.numeric(t0gmt2)
+```
+
+So - as.numeric() applied to POSIXct time give time in seconds since Jan 1 1970 GMT.
+
+Let's try reading in a file with date and time. The Miss R discharge csv we looked at last week had a date-time column.
+
+```{r}
+Qdf = read.csv("USGSMissRDischargeAug2021.csv")
+```
+
+The date-time format in this file is "8/27/21 0:00"
+So we would use the mdy format in lubridate to read in the date. How do we indicate time? mdy_hm
+
+```{r}
+Qdf$DT = mdy_hm(Qdf$DateTime)
+
+print(Qdf$DT[1:3])
+print(Qdf$DT[1])
+
+```
+
+Okay, looks good. But are the data reported in UTC? No - time are local time (CDT).
+For US, accepted time zones designators include:
+EST5EDT, CST6CDT, MST7MDT, PST8PDT
+
+```{r}
+Qdf$DT = force_tz(mdy_hm(Qdf$DateTime), tzone="CST6CDT")
+print(Qdf$DT[1:3])
+```
+
+Also name conventions like: America/Chicago, America/New_York
+
+```{r}
+Qdf$DT2 = force_tz(mdy_hm(Qdf$DateTime), tzone="America/Chicago")
+print(Qdf$DT2[1:3])
+#Qdf$DT3 = force_tz(mdy_hm(Qdf$DateTime), tzone="America/New_York")
+#print(Qdf$DT3[1:3])  #If the data were EST5EDT
+```
+

@@ -1,0 +1,186 @@
+---
+title: "Quant Methods - Time Series 1 - Dates"
+output:
+  html_document:
+    df_print: paged
+---
+
+**Dates**
+
+Open the SSTdata.csv dataset
+
+One useful thing about data frames is that they are relatively easy to subset. For today, e.g., we will start by working just with the data from 2020. We can create a 2020 subset of SST data as: 
+SST2020 = subset(SSTdf,select(c(1:2,12))
+or just
+SST2020 = SSTdf[c(1,2,12)]
+
+```{r}
+SSTdf = read.csv("SSTOI_CHLV2.csv")
+colnames(SSTdf)[1] = "M"  #in case it read in as i..M
+SST2020df = SSTdf[c(1,2,12)]
+```
+
+For the homework assignment, I suggested you create a time vector t = seq(2011,2021-1/366,1/366). It would be better to use information from the dataset to generate a vector of time. There are several ways to do that using functions in basic R. Also several R packages that facilitate working with dates, particularly lubridate. We’ll start with base R functions.
+
+For Assignment 1, the 1st column was called M for months
+2nd column was D for days
+
+Add a year vector to SST2020df: Y = rep(2020,366)
+2020 is  a leap year. If it wasn't we could remove Feb 29 using: SST2020=SST2020[-61,]
+
+```{r}
+SST2020df$Y = rep(2020,366)
+```
+
+We can create any date as: d1 = as.Date(“2020-01-01”) [typeof(d1)=numeric, class(d1)=Date]
+
+```{r}
+d1 = as.Date("2020-01-01")
+class(d1)
+```
+
+
+Dates can have many forms: 1/1/2020, Jan 1 2020, 1 Jan 2020, 2020-01-01,..
+Some conventions regarding formatting dates:
+
+•	%Y: 4-digit year (1982); %y: 2-digit year (82)
+•	%m: 2-digit month (01); %d: 2-digit day of the month (13)
+•	%A: weekday (Wednesday); %a: abbreviated weekday (Wed)
+•	%B: month (January); %b: abbreviated month (Jan)
+•	today = Sys.Date() -> "2021-09-13"
+
+
+```{r}
+today = Sys.Date()
+print(today)
+```
+
+Today we’ll use form YYYY-mm-dd (or %Y-%m-%d format in R).
+
+```{r}
+print(d1)
+typeof(d1)
+print(as.numeric(d1))
+```
+
+What does d1 = 17532 mean?
+Try as.numeric(as.Date("1970-01-01"))
+
+```{r}
+print(as.numeric(as.Date("1970-01-01")))
+```
+
+so 17532 is the number of days since Jan 1 1970.
+
+```{r}
+print(as.numeric(as.Date("1940-01-01")))
+```
+
+
+Ways to create a date vector
+
+We can paste Y, M, and D together with “-“ as separator: 
+Date = as.Date(paste(Y,M,D,sep="-"))
+
+```{r}
+Date = as.Date(paste(SST2020df$Y,SST2020df$M,SST2020df$D,sep="-"))
+print(Date[1:5])
+
+Date2 = as.Date(with(SST2020df,paste(Y,M,D,sep="-")))
+print(Date2[1:5])
+```
+
+```{r}
+plot(Date,SST2020df$SST2020,type="l",ylab="SST")
+```
+
+
+We might want to create a time vector just based on starting and ending dates
+
+```{r}
+dbeg = as.Date("2020-01-01")
+dend = as.Date("2020-12-31")
+Date3 = seq.Date(dbeg,dend,by="day")
+print(Date3[1:5])
+```
+
+We can create a time vector for the whole SST record from Assignment 1.
+
+```{r}
+SSTdf = read.csv("SSTOI_CHLV2.csv")
+SST = as.matrix(SSTdf[,3:12])
+SSTV = c(SST)
+length(SSTV)
+```
+
+```{r}
+dbeg = as.Date("2011-01-01")
+dend = as.Date("2020-12-31")
+Date = seq.Date(dbeg,dend,by="day")
+length(Date)
+```
+
+Why difference in length? Leap days.
+
+How can we find leap days and remove them? In SST, Feb 29 in nonleapyears is assigned SST = NA. So we can remove all NAs.
+
+```{r}
+i = which(is.na(SSTV))
+length(i)
+SSTV=SSTV[-i]
+length(SSTV)
+```
+
+```{r}
+plot(Date,SSTV,type="l",ylab="SST")
+```
+
+**Date arithmetic**
+
+R has a built-in function for finding the amount of time between 2 dates: difftime()
+
+```{r}
+diffd = dend-dbeg
+print(diffd)
+difftime(dend,dbeg, units=("hours"))
+difftime(dend,dbeg, units=("secs"))
+difftime(dend,dbeg, units=("weeks"))
+dbeg+30
+
+```
+
+Anything more complicated than the above tends to be easier if the lubridate package is loaded. Load lubridate if you haven't already.
+
+```{r}
+library(lubridate)
+```
+
+Lubridate makes it easy to extract year, month and day from a date vector. Or to calculate day of year. Or determine is a year is a leap year.
+
+```{r}
+YV = year(Date)
+print(yday(dbeg))
+print(leap_year(dbeg))
+```
+
+Lubridate makes it easier to read in dates with varying formats using ymd, mdy, dmy, etc.
+
+```{r}
+d1 = "2021-09-13"
+d2 = "9/13/21"
+d3 = "9 Sep 2021"
+
+x1 = ymd(d1)
+print(x1)
+x2 = mdy(d2) 
+print(x2)
+x3 = dmy(d3)
+print(x3)
+```
+
+```{r}
+as.Date(d1)
+#as.Date(d2)  #commented out because these generate errors. uncomment to see what happens
+#as.Date(d3)
+```
+
