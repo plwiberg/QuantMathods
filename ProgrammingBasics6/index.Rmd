@@ -1,5 +1,5 @@
 ---
-title: "QM - Programming Basics 6 - Loops and conditionals"
+title: "QM - Programming Basics 6 - Functions cont'd, loops and conditionals"
 output:
   html_document:
     df_print: paged

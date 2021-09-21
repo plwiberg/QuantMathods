@@ -1,9 +1,10 @@
 ---
-title: 'Quant Methods: Programming Basics 5 - Scripts and Functions'
+title: "QM Programming Basics 5 - Scripts and Functions"
 output:
   html_document:
     df_print: paged
 ---
+
 Class exercise: develop a program (code, script) to calculate hours of daylight as a function of latitude and day. 
 
 An outline of the code is in DaylightHoursOutline.R on Collab Resources/ClassCodes
@@ -66,12 +67,14 @@ daylighthrs = function(lat,yearday) {
 }
 
 ```
+
 Try it out...
 
 ```{r}
 x = daylighthrs(45,200)
 print(x)
 ```
+
 Can we input a vector of days?
 
 ```{r}
@@ -79,6 +82,7 @@ days = 1:365
 x = daylighthrs(45,days)
 plot(days,x)
 ```
+
 Yes!!
 also
 
@@ -88,6 +92,7 @@ day = 250
 x = daylighthrs(lats,day)
 plot(lats,x)
 ```
+
 Now try
 
 ```{r}
@@ -99,43 +104,6 @@ dim(mx)
 
 Calculated something, but not what we wanted.
 
-**Loops**
-
-Loops are useful programming structure for repeating a command until a certain condition is reached (certain number of times, until end of file, until a value is sufficiently small, …)
-
-Say we wanted to multiply elements of 2 vectors x and y together.
-We could write:
-
-x=1:10; y=11:20; nx=length(x)
-f = rep(0,nx)
-for (n in 1:nx) {
-	f [n]= x[n] * y[n]
-}
-
-Does it make sense to do this? NO! because we can just write f = x*y. Loops are less efficient and more space consuming than using vector operations. But sometimes they are necessary or clearer than avoiding them.
-
-Let's extend our daylight hour calculation to loop over latitude.
-
-```{r}
-dhmatrix = matrix(NA,365,131)  #fills with NA
-lats = -65:65
-days = 1:365
-for (i in 1:length(lats)){
-  dhi = daylighthrs(lats[i],days)
-  dhmatrix[,i]=dhi
-}
-dim(dhmatrix)
-dhmatrix[1:5,1:5]
-```
-
-
-```{r}
-jd = which(days == 250)
-jl = which(lats == 45)
-plot(lats,dhmatrix[jd,])
-plot(days,dhmatrix[,jl])
-
-```
 
 
 
